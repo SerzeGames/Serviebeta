@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Service Compris !</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#080810;overflow:hidden;width:100vw;height:100vh;font-family:'Segoe UI',Tahoma,sans-serif;user-select:none;touch-action:none;-webkit-touch-callout:none}
+#title-screen{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#1a1020,#080410 70%,#000);transition:opacity .6s}
+#title-screen.hidden{opacity:0;pointer-events:none}
+.tg{font-size:clamp(28px,8vw,60px);font-weight:900;color:#ff6b00;text-shadow:0 0 40px #ff4500,3px 3px 0 #000;margin-bottom:6px;letter-spacing:2px;animation:tp 2.5s ease-in-out infinite}
+@keyframes tp{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.ts{font-size:clamp(12px,3vw,20px);color:#c89b3c;margin-bottom:clamp(14px,3vh,28px);font-style:italic}
+.rg{display:flex;gap:clamp(6px,1.5vw,12px);flex-wrap:wrap;justify-content:center;max-width:90vw;margin-bottom:clamp(10px,2vh,22px)}
+.rc{width:clamp(70px,15vw,108px);height:clamp(95px,20vw,140px);border:2px solid #333;border-radius:10px;background:linear-gradient(160deg,#14142a,#1c1c3a);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:all .25s;overflow:hidden}
+.rc:hover{border-color:#ff6b00;transform:translateY(-6px) scale(1.05);box-shadow:0 10px 25px rgba(255,107,0,.35)}
+.rc.pk{border-color:#ffd700;box-shadow:0 0 20px rgba(255,215,0,.5)}
+.rc canvas{width:74px;height:90px;border-radius:5px}
+.rc .rn{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.bs{font-size:clamp(16px,4vw,22px);font-weight:700;padding:10px clamp(20px,6vw,40px);background:linear-gradient(145deg,#ff6b00,#cc3300);color:#fff;border:2px solid #ffd700;border-radius:12px;cursor:pointer;letter-spacing:2px;text-shadow:2px 2px 0 #000;transition:all .25s;box-shadow:0 4px 18px rgba(255,107,0,.35)}
+.bs:hover:not(:disabled){transform:scale(1.06)}
+.bs:disabled{opacity:.35;cursor:default}
+canvas#c{display:block;position:fixed;top:0;left:0;z-index:1}
+#bgvid{position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:0}
+#hud{position:fixed;top:6px;left:10px;display:none;z-index:500}
+.hp{background:rgba(0,0,0,.85);border:1px solid #444;border-radius:7px;padding:3px 10px;color:#ccc;font-size:12px;white-space:nowrap}
+#log{position:fixed;bottom:4px;left:4px;width:260px;max-height:100px;overflow-y:auto;background:rgba(0,0,0,.85);border:1px solid #333;border-radius:7px;padding:5px 7px;z-index:500;display:none;font-size:11px;color:#888;line-height:1.35}
+#log::-webkit-scrollbar{width:3px}#log::-webkit-scrollbar-thumb{background:#555;border-radius:3px}
+
+/* Counter dialog */
+#ctr-dlg{position:fixed;inset:0;z-index:800;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7)}
+#ctr-dlg.show{display:flex}
+.cd-box{background:#0e0e1a;border:2px solid #ffd700;border-radius:14px;padding:14px;max-width:95vw;width:92%;text-align:center;box-shadow:0 0 40px rgba(255,215,0,.2);max-height:90vh;overflow-y:auto}
+.cd-box h3{color:#ffd700;font-size:16px;margin-bottom:10px}
+.cd-played{display:flex;flex-direction:column;align-items:center;margin-bottom:12px}
+.cd-played canvas{border-radius:6px;border:2px solid #ff4444;box-shadow:0 0 15px rgba(255,68,68,.4)}
+.cd-sep{color:#888;font-size:13px;margin-bottom:8px}
+.cd-opts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+.cd-opts .cd-card{cursor:pointer;border-radius:6px;border:2px solid #444;transition:all .2s;position:relative}
+.cd-opts .cd-card:hover{border-color:#44ff44;transform:translateY(-4px);box-shadow:0 6px 18px rgba(68,255,68,.3)}
+.cd-opts .cd-card canvas{border-radius:4px}
+.cd-skip{font-size:14px;padding:8px 24px;border-radius:8px;cursor:pointer;border:1px solid #555;background:#1a1a2e;color:#ccc;transition:all .2s}
+.cd-skip:hover{border-color:#ff6b00;color:#ff6b00}
+
+#modal{position:fixed;inset:0;z-index:900;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6)}
+#modal.show{display:flex}
+.mb{background:#111;border:2px solid #c89b3c;border-radius:14px;padding:22px 28px;max-width:400px;text-align:center;color:#ddd;font-size:16px}
+.mb .bts{display:flex;gap:8px;justify-content:center;margin-top:12px}
+.mb .bt{font-size:13px;padding:6px 18px;border:1px solid #555;border-radius:7px;background:#1a1a2e;color:#ccc;cursor:pointer;transition:all .2s}
+.mb .bt:hover{border-color:#ff6b00;color:#ff6b00}
+.mb .bt.pr{background:linear-gradient(145deg,#ff6b00,#cc3300);border-color:#ffd700;color:#fff}
+#end{position:fixed;inset:0;z-index:950;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(5,5,5,.93)}
+#end.show{display:flex}
+#end h1{font-size:52px;font-weight:900;text-shadow:0 0 35px currentColor,3px 3px 0 #000;margin-bottom:12px}
+#end p{font-size:18px;color:#bbb;margin-bottom:22px}
+</style>
+</head>
+<body>
+<div id="title-screen">
+  <div class="tg">🎃 SERVICE COMPRIS !</div>
+  <div class="ts">Le festin de l'Ogre — Choisis ton peuple</div>
+  <div class="rg" id="raceGrid"></div>
+  <button class="bs" id="btnStart" disabled>⚔️ COMMENCER</button>
+</div>
+<div id="hud"><span class="hp" id="h2" style="font-size:15px;font-weight:bold">Votre Tour</span></div>
+<div id="log"></div>
+<div id="ctr-dlg"><div class="cd-box"><h3 id="cdTitle"></h3><div class="cd-played" id="cdPlayed"></div><div class="cd-sep">Vos cartes de contre disponibles :</div><div class="cd-opts" id="cdOpts"></div><button class="cd-skip" id="cdSkip">❌ Laisser passer</button></div></div>
+<div id="modal"><div class="mb"><div id="mt"></div><div class="bts" id="mbt"></div></div></div>
+<div id="end"><h1 id="et"></h1><p id="ep"></p><button class="bs" onclick="location.reload()">🔄 REJOUER</button></div>
+<video id="bgvid" autoplay loop muted playsinline><source src="images/background.mp4" type="video/mp4"></video>
+<canvas id="c"></canvas>
+<script>
+const B='images/',C=document.getElementById('c'),X=C.getContext('2d');
+const iR=new Image(),iE=new Image(),iT=new Image(),iB=new Image();
+const sfxAction=new Audio('son/action.mp3');
+const sfxContre=new Audio('son/contre.mp3');
+sfxAction.volume=0.6;sfxContre.volume=0.7;
+let sL=0;function oL(){sL++}
+iR.onload=oL;iE.onload=oL;iT.onload=oL;iB.onload=oL;
+iR.src=B+'races.jpg';iE.src=B+'effets.jpg';iT.src=B+'Gueuleton.jpg';iB.src=B+'cardback.jpg';
+
+const RS=[[29,33,360,520],[444,33,354,520],[842,33,363,520],[1256,33,356,520],[1665,33,361,520],[2079,33,352,520],[2484,33,349,520],[2892,33,353,520],[3305,33,357,520],[3719,33,349,520],[32,616,346,518],[432,616,361,518],[849,616,348,518],[1256,616,346,518],[1661,616,354,518],[2074,616,361,518],[2487,616,345,518],[2892,616,365,518],[3307,616,349,518],[3718,616,358,518],[29,1188,371,534],[432,1188,364,534],[841,1188,365,534],[1254,1188,356,534],[1659,1188,363,534],[2071,1188,375,534],[2489,1188,343,534],[2887,1188,365,534],[3304,1188,364,534],[3715,1188,361,534],[28,1782,351,531],[439,1782,347,531],[840,1782,368,531],[1254,1782,346,531],[1659,1782,356,531],[2076,1782,349,531],[2482,1782,365,531],[2887,1782,363,531],[3298,1782,366,531],[3709,1782,363,531],[21,2367,362,533],[433,2367,362,533],[840,2367,359,533],[1247,2367,370,533],[1651,2367,373,533],[2089,2367,339,533],[2495,2367,338,533],[2899,2367,343,533],[3304,2367,350,533],[3722,2367,341,533],[31,2961,344,509],[442,2961,342,509],[848,2961,357,509],[1256,2961,347,509]];
+const EW=409,EH=570,EH2=610,ES={
+a_table_0:[EW*2,0,EW,EH],a_table_1:[EW*3,0,EW,EH],a_table_2:[EW*4,0,EW,EH],
+buffet:[EW*6,0,EW,EH],choucroute:[EW*7,0,EW,EH],fromage:[EW*8,0,EW,EH],goinfrerie:[EW*9,0,EW,EH],
+hors_doeuvre:[0,570,EW,EH],panier:[EW,570,EW,EH],pique:[EW*2,570,EW,EH],plat_du_jour:[EW*3,570,EW,EH],
+chef_parti:[EW*4,570,EW,EH],garde_manger:[EW*5,570,EW,EH],surprise_chef:[EW*6,570,EW,EH],
+trop_sale:[EW*7,570,EW,EH],chaud_devant:[EW*8,570,EW,EH],indigestion:[EW*9,570,EW,EH],
+pas_bon:[0,1140,EW,EH2],retour_cuisine:[EW,1140,EW,EH2],ronde:[EW*2,1140,EW,EH2],
+trou_normand:[EW*3,1140,EW,EH2],veneneux:[EW*4,1140,EW,EH2]};
+
+const RACES=[
+{id:'citrouille',name:'Citrouille',color:'#ff8c00',ss:0,m:['Barnabé Chalote','Ernest Ragon','Michou de Bruxelles','Benoît de Pécan','Bernard Iquo','Lucas Roterapé','Bruno Bergine','Herbert Gamotte','Paul Potiron']},
+{id:'dryade',name:'Dryade',color:'#27ae60',ss:9,m:['Sybilla Boquet','Vanessa Lami','Nathalie Mantere','Ines Cargot','Gwladys Theri','Natacha Malo','Tatiana Tomy','Grâce Zunni','Emma Niolia']},
+{id:'goblin',name:'Goblin',color:'#8e44ad',ss:18,m:['Ghislain Bécil','Isidore Igor','Mathias Tique','Saturnin de Jardin','Armand Chabalé','Augustin Tumar','Aubin Gladèche','Jean Paul Gichon','Caporal Lolle']},
+{id:'orc',name:'Orc',color:'#7cb342',ss:27,m:['Severin Idrole','Edgar Detriach','Richard Habeu','Hector Telini','Robin Moussan','Guy Tarsaich','Hervé Tété','Alphonse Danita','Hercule Buto']},
+{id:'sorciere',name:'Sorcière',color:'#c0392b',ss:36,m:['Colette Arli','Flora Daigoux','Sylvie Vissaxion','Sophie Stulle','Helene Dewaere','Lucie Nuxyte','Barbara Tineux','Eugenie Trate','Sabine Hoculère']},
+{id:'troll',name:'Troll',color:'#2980b9',ss:45,m:['Thierry Golade','Igor Gonzola','Gustave Arié','Nicolas Vabeau','Armand Dibule','Philippe Ossution','Oscar Nivaure','Aldo Bermann','Albert Kenker']}];
+
+// counters map is now per-card via .counters array
+const ACTIONS=[
+{id:'a_table_1',name:'À Table !',desc:'Livre un personnage adverse au géant.',type:'attack',count:4,sprite:'a_table_0',counters:['surprise_chef','trop_sale']},
+{id:'a_table_2',name:'À Table ! (anti-Surprise)',desc:'Livre un adversaire. Pas de Surprise du Chef.',type:'attack',count:3,sprite:'a_table_1',counters:['trop_sale']},
+{id:'a_table_3',name:'À Table ! (blindée)',desc:'Livre un adversaire. Ni Surprise, ni Trop Salé.',type:'attack',count:2,sprite:'a_table_2',counters:[]},
+{id:'buffet',name:'Buffet à Volonté',desc:'Le gueuleton commence (2 dévorés/tour).',type:'attack',count:2,sprite:'buffet',counters:[]},
+{id:'choucroute',name:'Choucroute Melba',desc:'Tous sur la table sont dévorés.',type:'attack',count:1,sprite:'choucroute',counters:[]},
+{id:'fromage',name:'Fromage & Dessert',desc:'Livrez 2 personnages adverses au géant.',type:'attack',count:3,sprite:'fromage',counters:[]},
+{id:'goinfrerie',name:'Goinfrérie',desc:'Livrez 2 adversaires. Gueuleton (2/tour).',type:'attack',count:2,sprite:'goinfrerie',counters:['garde_manger']},
+{id:'hors_doeuvre',name:"Hors d'Œuvre",desc:'Le gueuleton commence immédiatement.',type:'attack',count:2,sprite:'hors_doeuvre',counters:[]},
+{id:'panier',name:'Panier Garni',desc:'Livre un personnage adverse au géant.',type:'attack',count:3,sprite:'panier',counters:[]},
+{id:'pique',name:'Pique Assiette',desc:'Adversaire dévoré, mais livrez un des vôtres.',type:'attack',count:1,sprite:'pique',counters:[]},
+{id:'plat_du_jour',name:'Plat du Jour',desc:'Livre un adversaire au plus près de l\'assiette.',type:'attack',count:2,sprite:'plat_du_jour',counters:[]},
+{id:'chef_parti',name:'Le Chef est Parti',desc:'Annule « Retour en Cuisine ».',type:'defense',count:2,sprite:'chef_parti',counters:[]},
+{id:'garde_manger',name:'Garde-Manger',desc:'Protège contre « Goinfrérie ».',type:'defense',count:1,sprite:'garde_manger',counters:[]},
+{id:'surprise_chef',name:'Surprise du Chef',desc:'Annule « À Table ! ». Adversaire livre un sien.',type:'defense',count:2,sprite:'surprise_chef',counters:[]},
+{id:'trop_sale',name:'Trop Salé',desc:'Annule « À Table ! ».',type:'defense',count:2,sprite:'trop_sale',counters:[]},
+{id:'chaud_devant',name:'Chaud Devant',desc:'Réorganisez les positions sur la table.',type:'special',count:1,sprite:'chaud_devant',counters:[]},
+{id:'indigestion',name:'Indigestion',desc:'Enlevez tous les personnages de la table.',type:'special',count:1,sprite:'indigestion',counters:[]},
+{id:'pas_bon',name:'Pas Bon !',desc:'Enlevez tous vos personnages de la table.',type:'defense',count:1,sprite:'pas_bon',counters:[]},
+{id:'retour_cuisine',name:'Retour en Cuisine',desc:'Enlevez un personnage de la table.',type:'defense',count:1,sprite:'retour_cuisine',counters:['chef_parti']},
+{id:'ronde',name:'Ronde des Plats',desc:'Remplacez un personnage sur la table.',type:'special',count:1,sprite:'ronde',counters:[]},
+{id:'trou_normand',name:'Trou Normand',desc:'Le gueuleton s\'arrête immédiatement.',type:'defense',count:1,sprite:'trou_normand',counters:[]},
+{id:'veneneux',name:'Vénéneux',desc:'Enlevez un personnage de la table du géant.',type:'special',count:1,sprite:'veneneux',counters:[]}];
+
+const S={phase:'title',W:0,H:0,pRace:null,aRace:null,turn:1,cur:0,
+pH:[],aH:[],pC:[],aC:[],tbl:[],eat:[],dk:[],
+sel:-1,hovH:-1,hovT:-1,hovPC:-1,hovBtn:null,can:true,drawn:false,
+parts:[],oA:0,oE:false,anims:[],
+actCard:null,actTmr:0,
+effCard:null,effTmr:0,
+pPos:[],aPos:[],
+ctrPend:false,ctrRes:null,
+gueuleton:false,gRate:1,
+discard:[],discardMode:false};
+
+function shuf(a){for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
+
+// Refill deck from discard pile when empty
+function refillDeck(){
+  if(S.dk.length>0)return;
+  if(S.discard.length===0)return;
+  // Move all discard back into deck and shuffle
+  S.dk=S.discard.splice(0);
+  shuf(S.dk);
+  log('🔄 Pioche reconstituée depuis la défausse !');
+  uHUD();
+}
+function lerp(a,b,t){return a+(b-a)*t}
+function log(m){const e=document.getElementById('log');e.innerHTML+=`<div style="border-bottom:1px solid #1a1a1a;padding:2px 0">${m}</div>`;e.scrollTop=e.scrollHeight}
+function spP(x,y,c,n=12){for(let i=0;i<n;i++)S.parts.push({x,y,vx:(Math.random()-.5)*7,vy:(Math.random()-.5)*7-2,l:1,d:.015+Math.random()*.02,s:2+Math.random()*4,c})}
+function addAn(card,fx,fy,tx,ty,dur,cb,o={}){S.anims.push({card,fx,fy,tx,ty,p:0,dur:dur||400,cb,back:o.back,fw:o.fw||0,fh:o.fh||0,tw:o.tw||0,th:o.th||0})}
+function easeOut(t){return 1-Math.pow(1-t,3)}
+
+// DPR-aware resize
+function resize(){
+  const dpr=devicePixelRatio||1;
+  S.W=innerWidth;S.H=innerHeight;
+  C.width=S.W*dpr;C.height=S.H*dpr;
+  C.style.width=S.W+'px';C.style.height=S.H+'px';
+  X.setTransform(dpr,0,0,dpr,0,0);
+  X.imageSmoothingEnabled=true;X.imageSmoothingQuality='high';
+}
+addEventListener('resize',resize);
+let _dpr=devicePixelRatio||1;
+setInterval(()=>{const d=devicePixelRatio||1;if(d!==_dpr){_dpr=d;resize()}},150);
+resize();
+
+const RAT=360/520;
+
+function getL(){
+  const W=S.W,H=S.H;
+  const mob=W<800||('ontouchstart' in window); // Mobile detection
+  const port=H>W; // Portrait mode
+
+  // Card sizes adapt to screen
+  let CH,CW,SH,SW,TH,TW;
+  if(mob){
+    if(port){
+      // Mobile portrait: small cards, tight layout
+      CH=Math.max(60,Math.min(110,H*.1))|0;
+      SH=Math.max(40,Math.min(70,H*.065))|0;
+      TH=Math.max(30,Math.min(50,H*.045))|0;
+    } else {
+      // Mobile landscape
+      CH=Math.max(70,Math.min(130,H*.18))|0;
+      SH=Math.max(45,Math.min(80,H*.11))|0;
+      TH=Math.max(30,Math.min(55,H*.08))|0;
+    }
+  } else {
+    // Desktop - larger cards for readability
+    CH=Math.max(100,Math.min(200,H*.22))|0;
+    SH=Math.max(70,Math.min(130,H*.15))|0;
+    TH=Math.max(50,Math.min(90,H*.1))|0;
+  }
+  CW=(CH*RAT)|0; SW=(SH*RAT)|0; TW=(TH*RAT)|0;
+
+  const gap=mob?2:6;
+
+  // AI creatures top row
+  const acN=S.aC.length,acSp=Math.min(TW+(mob?2:3),(W-(mob?10:20))/Math.max(acN,1));
+  const acX=(W-acSp*Math.max(acN-1,0)-TW)/2,acY=mob?1:2;
+  // AI hand
+  const ahN=S.aH.length,ahSp=Math.min(TW+2,(W-10)/Math.max(ahN,1));
+  const ahX=(W-ahSp*Math.max(ahN-1,0)-TW)/2,ahY=acY+TH+gap;
+  // Action zone + Effect zone
+  const azW=mob?CW+8:CW+16,azH=mob?CH+8:CH+16;
+  const ezW=azW,ezH=azH;
+  const azX=W/2-azW-2,azY=ahY+TH+gap;
+  const ezX=W/2+2,ezY=azY;
+  // Table
+  const tW=Math.min(W-(mob?20:SW+60),mob?W-16:820),tH=SH+(mob?8:14);
+  const tX=(W-tW-(mob?0:SW+20))/2,tY=azY+azH+gap;
+  const plateZone=tW*.35|0;
+  const cardZone=tW-plateZone-6;
+  const tN=S.tbl.length,tSp=Math.min(SW+3,cardZone/Math.max(tN,1));
+  const tcX=tX+plateZone;
+  const tcY=tY+(tH-SH)/2;
+  const plateX=tX+plateZone/2-SW*.3,plateY=tY+(tH-SH*.6)/2;
+  // Draw pile
+  const dpW=mob?SW*.8|0:SW,dpH=mob?SH*.8|0:SH;
+  const dpX=mob?tX+tW-dpW-4:tX+tW+12,dpY=mob?tY-dpH-4:tY+(tH-dpH)/2;
+  // Player hand
+  const phN=S.pH.length,phSp=Math.min(CW+(mob?2:4),(W-(mob?10:40))/Math.max(phN,1));
+  const phX=(W-phSp*Math.max(phN-1,0)-CW)/2,phY=tY+tH+gap;
+  // Player creatures
+  const pcN=S.pC.length,pcSp=Math.min(SW+2,(W-10)/Math.max(pcN,1));
+  const pcX=(W-pcSp*Math.max(pcN-1,0)-SW)/2,pcY=phY+CH+gap;
+  // Discard pile
+  const ddW=mob?SW*.8|0:SW,ddH=mob?SH*.8|0:SH;
+  const ddX=mob?tX+4:tX-SW-12,ddY=mob?tY-ddH-4:tY+(tH-ddH)/2;
+  // Button
+  const bpX=W/2-100,bpY=pcY+SH+gap;
+
+  return{CW,CH,SW,SH,TW,TH,mob,acX,acY,acSp,ahX,ahY,ahSp,azX,azY,azW,azH,ezX,ezY,ezW,ezH,tX,tY,tW,tH,tcX,tSp,tcY,plateX,plateY,dpX,dpY,dpW,dpH,ddX,ddY,ddW,ddH,phX,phY,phSp,pcX,pcY,pcSp,bpX,bpY};
+}
+
+// Check if a card can be played given current game state
+function canPlay(card){
+  if(card.isCrea)return false; // Creature cards aren't played from hand
+  const id=card.id;
+  // Attack cards: need enemy creatures to target
+  if(id==='a_table_1'||id==='a_table_2'||id==='a_table_3'||id==='panier'||id==='plat_du_jour'||id==='fromage')
+    return S.aC.length>0;
+  if(id==='goinfrerie')return S.aC.length>=2;
+  if(id==='pique')return S.aC.length>0&&S.tbl.some(e=>e.owner===1); // need enemy on table + enemy creature
+  // Cards that need creatures on the table
+  if(id==='buffet'||id==='hors_doeuvre')return S.tbl.length>0;
+  if(id==='choucroute')return S.tbl.length>0;
+  if(id==='chaud_devant')return S.tbl.length>0;
+  if(id==='ronde')return S.tbl.some(e=>e.owner===0)&&S.aC.length>0;
+  if(id==='veneneux')return S.tbl.some(e=>e.owner===0);
+  if(id==='indigestion')return S.tbl.length>0;
+  // Defense: need YOUR creatures on the table
+  if(id==='pas_bon')return S.tbl.some(e=>e.owner===0);
+  if(id==='retour_cuisine')return S.tbl.some(e=>e.owner===0);
+  // Gueuleton stoppers: need active gueuleton
+  if(id==='trou_normand')return S.gueuleton;
+  // Counter cards played proactively: generally not useful alone
+  if(id==='chef_parti'||id==='garde_manger'||id==='surprise_chef'||id==='trop_sale')return false;
+  return true;
+}
+
+// Card drawing
+function rr(x,y,w,h,r){X.beginPath();X.moveTo(x+r,y);X.lineTo(x+w-r,y);X.quadraticCurveTo(x+w,y,x+w,y+r);X.lineTo(x+w,y+h-r);X.quadraticCurveTo(x+w,y+h,x+w-r,y+h);X.lineTo(x+r,y+h);X.quadraticCurveTo(x,y+h,x,y+h-r);X.lineTo(x,y+r);X.quadraticCurveTo(x,y,x+r,y);X.closePath()}
+
+function drawCard(x,y,w,h,card,o={}){
+  X.save();
+  if(o.grey){X.shadowColor='rgba(0,0,0,.5)';X.shadowBlur=4}
+  else if(o.sel){X.shadowColor='rgba(255,215,0,.8)';X.shadowBlur=22}
+  else if(o.hov){X.shadowColor='rgba(255,170,50,.6)';X.shadowBlur=16}
+  else{X.shadowColor='rgba(0,0,0,.8)';X.shadowBlur=8}
+  X.shadowOffsetY=2;
+  X.beginPath();rr(x,y,w,h,6);X.clip();
+  if(o.back){
+    if(iB.complete)X.drawImage(iB,0,0,iB.naturalWidth,iB.naturalHeight,x,y,w,h);
+    else{X.fillStyle='#1a1020';X.fillRect(x,y,w,h)}
+  }else if(card&&card.isCrea&&iR.complete){
+    const sp=RS[card.sprIdx];if(sp)X.drawImage(iR,sp[0],sp[1],sp[2],sp[3],x,y,w,h);
+  }else if(card&&!card.isCrea&&iE.complete){
+    const sp=ES[card.sprite];if(sp)X.drawImage(iE,sp[0],sp[1],sp[2],sp[3],x,y,w,h);
+    else{X.fillStyle='#1a1a2e';X.fillRect(x,y,w,h);X.font='9px sans-serif';X.fillStyle='#aaa';X.textAlign='center';X.textBaseline='middle';X.fillText(card.name,x+w/2,y+h/2)}
+  }else{X.fillStyle='#151520';X.fillRect(x,y,w,h)}
+  // Grey overlay for unplayable cards
+  if(o.grey){
+    X.fillStyle='rgba(0,0,0,.55)';X.fillRect(x,y,w,h);
+  }
+  X.restore();
+  X.save();rr(x,y,w,h,6);
+  X.strokeStyle=o.grey?'rgba(60,60,60,.3)':o.sel?'#ffd700':o.hov?'rgba(255,200,100,.9)':'rgba(60,60,60,.5)';
+  X.lineWidth=o.sel?3:o.hov?2.5:1;X.stroke();X.restore();
+}
+
+// Smooth hand position targets
+function updateHandPos(){
+  const l=getL();
+  // Player hand targets
+  while(S.pPos.length<S.pH.length)S.pPos.push({x:l.phX,y:l.phY,ly:0});
+  S.pPos.length=S.pH.length;
+  for(let i=0;i<S.pH.length;i++){
+    const tx=l.phX+i*l.phSp,ty=l.phY;
+    S.pPos[i].x=lerp(S.pPos[i].x,tx,.14);
+    S.pPos[i].y=lerp(S.pPos[i].y,ty,.14);
+    const hov=S.hovH===i,sel=S.sel===i;
+    const active=S.cur===0&&S.can&&canPlay(S.pH[i]);
+    const tgtLy=(hov&&active)?-26:(sel&&active)?-16:0;
+    S.pPos[i].ly=lerp(S.pPos[i].ly,tgtLy,.16);
+  }
+  // AI hand targets
+  while(S.aPos.length<S.aH.length)S.aPos.push({x:l.ahX,y:l.ahY});
+  S.aPos.length=S.aH.length;
+  for(let i=0;i<S.aH.length;i++){
+    const tx=l.ahX+i*l.ahSp,ty=l.ahY;
+    S.aPos[i].x=lerp(S.aPos[i].x,tx,.14);
+    S.aPos[i].y=lerp(S.aPos[i].y,ty,.14);
+  }
+}
+
+// Main draw
+function draw(){
+  const W=S.W,H=S.H;
+  // Clear canvas (transparent to show video background)
+  X.clearRect(0,0,W,H);
+  // Semi-transparent dark overlay for readability
+  X.fillStyle='rgba(5,5,15,.45)';
+  X.fillRect(0,0,W,H);
+  if(S.phase!=='play'){drawPt();return}
+  const l=getL();
+  updateHandPos();
+
+  // AI creatures (VISIBLE - face up)
+  X.font='10px sans-serif';X.fillStyle='rgba(255,100,100,.5)';X.textAlign='center';X.textBaseline='bottom';
+  X.fillText(`Créatures adverses (${S.aC.length})`,W/2,l.acY-1);
+  S.aC.forEach((c,i)=>drawCard(l.acX+i*l.acSp,l.acY,l.TW,l.TH,c));
+
+  // AI hand (face down, animated positions)
+  X.fillStyle='rgba(200,150,60,.35)';X.fillText(`Main adverse (${S.aH.length})`,W/2,l.ahY-1);
+  for(let i=0;i<S.aH.length;i++){
+    const p=S.aPos[i]||{x:l.ahX+i*l.ahSp,y:l.ahY};
+    drawCard(p.x,p.y,l.TW,l.TH,null,{back:true});
+  }
+
+  // Action zone
+  rr(l.azX-1,l.azY-1,l.azW+2,l.azH+2,8);
+  X.strokeStyle=S.actCard?'rgba(255,200,50,.6)':'rgba(80,60,30,.2)';X.lineWidth=2;X.stroke();
+  X.fillStyle='rgba(25,18,8,.4)';X.beginPath();rr(l.azX,l.azY,l.azW,l.azH,7);X.fill();
+  X.font='9px sans-serif';X.fillStyle='rgba(200,155,60,.35)';X.textAlign='center';X.textBaseline='top';
+  X.fillText('ACTION',l.azX+l.azW/2,l.azY+2);
+  if(S.actCard){
+    const ax=l.azX+(l.azW-l.CW)/2,ay=l.azY+(l.azH-l.CH)/2;
+    drawCard(ax,ay,l.CW,l.CH,S.actCard);
+    X.save();X.globalAlpha=.12+Math.sin(S.oA*2)*.07;rr(ax-3,ay-3,l.CW+6,l.CH+6,8);X.strokeStyle='#ffd700';X.lineWidth=3;X.stroke();X.restore();
+  }
+
+  // Effect zone (counters / sauce cards)
+  rr(l.ezX-1,l.ezY-1,l.ezW+2,l.ezH+2,8);
+  X.strokeStyle=S.effCard?'rgba(100,255,100,.5)':'rgba(40,60,30,.2)';X.lineWidth=2;X.stroke();
+  X.fillStyle='rgba(10,25,10,.4)';X.beginPath();rr(l.ezX,l.ezY,l.ezW,l.ezH,7);X.fill();
+  X.font='9px sans-serif';X.fillStyle='rgba(100,200,100,.35)';X.textAlign='center';X.textBaseline='top';
+  X.fillText('EFFET / CONTRE',l.ezX+l.ezW/2,l.ezY+2);
+  if(S.effCard){
+    const ex=l.ezX+(l.ezW-l.CW)/2,ey=l.ezY+(l.ezH-l.CH)/2;
+    drawCard(ex,ey,l.CW,l.CH,S.effCard);
+    X.save();X.globalAlpha=.15+Math.sin(S.oA*3)*.08;rr(ex-3,ey-3,l.CW+6,l.CH+6,8);X.strokeStyle='#44ff44';X.lineWidth=3;X.stroke();X.restore();
+  }
+
+  // Table
+  X.save();X.beginPath();rr(l.tX,l.tY,l.tW,l.tH,10);X.clip();
+  if(iT.complete){X.drawImage(iT,0,0,iT.naturalWidth,iT.naturalHeight,l.tX,l.tY,l.tW,l.tH);X.fillStyle='rgba(0,0,0,.15)';X.fillRect(l.tX,l.tY,l.tW,l.tH)}
+  else{X.fillStyle='rgba(50,28,10,.5)';X.fillRect(l.tX,l.tY,l.tW,l.tH)}
+  X.restore();
+  rr(l.tX,l.tY,l.tW,l.tH,10);
+  if(S.gueuleton){
+    X.strokeStyle=`rgba(255,${40+Math.sin(S.oA*3)*30|0},0,.8)`;X.lineWidth=3;X.stroke();
+    // Outer glow
+    X.save();X.globalAlpha=.15+Math.sin(S.oA*2)*.1;
+    rr(l.tX-3,l.tY-3,l.tW+6,l.tH+6,12);X.strokeStyle='#ff2200';X.lineWidth=4;X.stroke();
+    X.restore();
+  } else {
+    X.strokeStyle='rgba(139,105,20,.4)';X.lineWidth=1.5;X.stroke();
+  }
+  X.font='9px sans-serif';X.fillStyle='rgba(255,220,150,.5)';X.textAlign='center';X.textBaseline='bottom';
+  X.fillText("🍽️ Table de l'Ogre — ← Assiette",l.tX+l.tW/2,l.tY-1);
+  if(S.gueuleton){
+    X.save();
+    X.font=`bold ${l.mob?14:18}px sans-serif`;
+    X.fillStyle=`rgba(255,${30+Math.sin(S.oA*3)*30|0},0,${.7+Math.sin(S.oA*2)*.3})`;
+    X.textAlign='left';X.textBaseline='bottom';
+    X.fillText('GUEULETON ACTIF !',l.tX+4,l.tY-3);
+    X.restore();
+  }
+  if(S.oE){S.oA+=.08;const sc=1+Math.sin(S.oA)*.2;X.save();X.translate(l.tX+18,l.tY+l.tH/2);X.scale(sc,sc);X.font='22px serif';X.textAlign='center';X.textBaseline='middle';X.fillText('👹',0,0);X.restore()}
+  // Eaten cards pile on the plate
+  if(S.eat.length>0){
+    const pileW=l.SW*.45,pileH=l.SH*.45;
+    const pileX=l.plateX,pileY=l.plateY;
+    // Show last 3 eaten cards stacked with slight offset
+    const show=Math.min(S.eat.length,3);
+    for(let i=show-1;i>=0;i--){
+      const card=S.eat[S.eat.length-1-i];
+      const ox=i*3,oy=i*3;
+      X.save();X.globalAlpha=i===0?0.85:0.4;
+      drawCard(pileX+ox,pileY-oy,pileW,pileH,card);
+      X.restore();
+    }
+    // Skull count badge
+    X.save();
+    X.fillStyle='rgba(0,0,0,.8)';X.beginPath();X.arc(pileX+pileW,pileY,11,0,Math.PI*2);X.fill();
+    X.strokeStyle='#ff4444';X.lineWidth=1.5;X.stroke();
+    X.font='bold 10px sans-serif';X.fillStyle='#ff6666';X.textAlign='center';X.textBaseline='middle';
+    X.fillText('💀'+S.eat.length,pileX+pileW,pileY);
+    X.restore();
+  }
+
+  S.tbl.forEach((e,i)=>{
+    if(e._fly)return;
+    const targetX=l.tcX+i*l.tSp;
+    // Initialize or lerp smooth position
+    if(e._x===undefined)e._x=targetX;
+    e._x=lerp(e._x,targetX,.12);
+    drawCard(e._x,l.tcY,l.SW,l.SH,e.card,{hov:S.hovT===i});
+    X.fillStyle=e.owner===0?'#4caf50':'#f44336';X.beginPath();X.arc(e._x+l.SW-4,l.tcY+4,3.5,0,Math.PI*2);X.fill();
+    X.strokeStyle='#000';X.lineWidth=.8;X.stroke();
+  });
+
+  // Discard pile (left of table)
+  rr(l.ddX,l.ddY,l.ddW,l.ddH,6);
+  X.fillStyle='rgba(40,40,40,.4)';X.fill();
+  X.strokeStyle='rgba(80,80,80,.4)';X.lineWidth=1;X.stroke();
+  if(S.discard.length>0){
+    const top=S.discard[S.discard.length-1];
+    X.save();X.globalAlpha=.5;
+    drawCard(l.ddX,l.ddY,l.ddW,l.ddH,top,{grey:true});
+    X.restore();
+    X.save();X.fillStyle='rgba(0,0,0,.7)';X.beginPath();X.arc(l.ddX+l.ddW-2,l.ddY+l.ddH-2,10,0,Math.PI*2);X.fill();
+    X.font='bold 10px sans-serif';X.fillStyle='#888';X.textAlign='center';X.textBaseline='middle';
+    X.fillText(S.discard.length,l.ddX+l.ddW-2,l.ddY+l.ddH-2);X.restore();
+  }
+  X.font='9px sans-serif';X.fillStyle='rgba(150,150,150,.4)';X.textAlign='center';X.textBaseline='top';
+  X.fillText('Défausse',l.ddX+l.ddW/2,l.ddY+l.ddH+2);
+
+  // Draw pile
+  if(S.dk.length>0){
+    const stk=Math.min(S.dk.length,4);
+    for(let i=stk-1;i>=0;i--){X.save();X.globalAlpha=i===0?1:.5;drawCard(l.dpX+i*2,l.dpY-i*2,l.dpW,l.dpH,null,{back:true});X.restore()}
+    X.save();X.fillStyle='rgba(0,0,0,.7)';X.beginPath();X.arc(l.dpX+l.dpW-2,l.dpY+l.dpH-2,12,0,Math.PI*2);X.fill();X.strokeStyle='#c89b3c';X.lineWidth=1;X.stroke();
+    X.font='bold 11px sans-serif';X.fillStyle='#ffd700';X.textAlign='center';X.textBaseline='middle';X.fillText(S.dk.length>99?'∞':S.dk.length,l.dpX+l.dpW-2,l.dpY+l.dpH-2);X.restore();
+    X.font='9px sans-serif';X.fillStyle='rgba(200,155,60,.4)';X.textAlign='center';X.textBaseline='top';X.fillText('Pioche',l.dpX+l.dpW/2,l.dpY+l.dpH+2);
+  }
+
+  // Player hand (animated positions)
+  const myTurn=S.cur===0&&S.can;
+  S.pH.forEach((card,i)=>{
+    const p=S.pPos[i];if(!p)return;
+    const hov=S.hovH===i;
+    // In discard mode: all cards are clickable (highlighted), not greyed
+    const grey=S.discardMode?false:(!myTurn||!canPlay(card));
+    const discardHov=S.discardMode&&hov;
+    drawCard(p.x,p.y+p.ly,l.CW,l.CH,card,{hov:discardHov||(hov&&!grey),grey});
+  });
+
+  // Large card preview on hover (not on mobile - too intrusive)
+  if(!l.mob&&(myTurn||S.discardMode)&&S.hovH>=0&&S.hovH<S.pH.length){
+    const card=S.pH[S.hovH],p=S.pPos[S.hovH];
+    if(p){
+      const pvW=l.CW*1.8|0, pvH=l.CH*1.8|0;
+      const pvX=Math.max(4,Math.min(p.x+l.CW/2-pvW/2, W-pvW-4));
+      const pvY=Math.max(4, p.y+p.ly-pvH-12);
+      X.save();
+      X.fillStyle='rgba(0,0,0,.7)';
+      rr(pvX-6,pvY-6,pvW+12,pvH+(S.discardMode?50:38),10);X.fill();
+      X.strokeStyle=S.discardMode?'rgba(255,100,100,.6)':'rgba(255,200,100,.5)';X.lineWidth=2;
+      rr(pvX-6,pvY-6,pvW+12,pvH+(S.discardMode?50:38),10);X.stroke();
+      X.restore();
+      // Draw big card
+      const grey=!canPlay(card);
+      drawCard(pvX,pvY,pvW,pvH,card,{grey});
+      // Name + desc below
+      X.save();
+      X.font='bold 13px sans-serif';X.fillStyle=grey?'#888':'#ffaa44';X.textAlign='center';X.textBaseline='top';
+      X.fillText(card.name,pvX+pvW/2,pvY+pvH+4);
+      X.font='11px sans-serif';X.fillStyle='#ccc';
+      X.fillText(card.desc||'',pvX+pvW/2,pvY+pvH+20);
+      if(S.discardMode){X.font='bold 12px sans-serif';X.fillStyle='#ff8844';X.fillText('🗑️ Cliquez pour défausser cette carte',pvX+pvW/2,pvY+pvH+34)}
+      else if(grey){X.font='bold 12px sans-serif';X.fillStyle='#ff6666';X.fillText('⛔ Non jouable actuellement',pvX+pvW/2,pvY+pvH+34)}
+      X.restore();
+    }
+  }
+
+  // Player creatures
+  X.font='10px sans-serif';X.fillStyle='rgba(100,200,100,.45)';X.textAlign='center';X.textBaseline='bottom';
+  X.fillText(`Vos Créatures (${S.pC.length})`,W/2,l.pcY-1);
+  S.pC.forEach((c,i)=>drawCard(l.pcX+i*l.pcSp,l.pcY,l.SW,l.SH,c));
+
+  // Buttons below creatures: only Passer (1 action per turn = play a card OR pass)
+  if(S.cur===0&&S.can&&!S.ctrPend){
+    dBtn(l.bpX-40,l.bpY,200,32,S.discardMode?'🗑️ Choisir carte...':'⏭ Défausser & Passer',S.discardMode?'#885500':'#aa2200',S.hovBtn==='pass');
+  }
+  if(S.eat.length){X.font='10px sans-serif';X.fillStyle='rgba(255,80,80,.4)';X.textAlign='left';X.textBaseline='top';X.fillText(`💀 Dévorés: ${S.eat.length}`,l.tX,l.tY+l.tH+2)}
+
+  // Flying anims
+  for(const a of S.anims){
+    const t=easeOut(a.p);const cx=lerp(a.fx,a.tx,t),cy=lerp(a.fy,a.ty,t);
+    const sc=1+Math.sin(a.p*Math.PI)*.12;
+    const aw=a.fw&&a.tw?lerp(a.fw,a.tw,t):(a.tw||l.CW);
+    const ah=a.fh&&a.th?lerp(a.fh,a.th,t):(a.th||l.CH);
+    X.save();X.translate(cx+aw/2,cy+ah/2);X.scale(sc,sc);X.translate(-aw/2,-ah/2);
+    if(a.back&&a.p<.65)drawCard(0,0,aw,ah,a.card,{back:true});
+    else drawCard(0,0,aw,ah,a.card);
+    X.restore();
+  }
+  drawPt();
+}
+
+function dBtn(x,y,w,h,t,c,hv){
+  X.save();rr(x,y,w,h,7);const g=X.createLinearGradient(x,y,x,y+h);
+  g.addColorStop(0,hv?ltn(c,25):c);g.addColorStop(1,ltn(c,-25));X.fillStyle=g;X.fill();
+  if(hv){rr(x,y,w,h,7);X.strokeStyle='rgba(255,255,255,.3)';X.lineWidth=1;X.stroke()}
+  X.font='bold 13px sans-serif';X.fillStyle='#fff';X.textAlign='center';X.textBaseline='middle';X.fillText(t,x+w/2,y+h/2);X.restore();
+}
+function ltn(h,a){let r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgb(${Math.max(0,Math.min(255,r+a))},${Math.max(0,Math.min(255,g+a))},${Math.max(0,Math.min(255,b+a))})`}
+function drawPt(){for(const p of S.parts){X.globalAlpha=p.l;X.fillStyle=p.c;X.beginPath();X.arc(p.x,p.y,p.s,0,Math.PI*2);X.fill()}X.globalAlpha=1}
+
+let lT=0;
+function upd(ts){
+  const dt=Math.min(ts-lT,50);lT=ts;
+  for(let i=S.anims.length-1;i>=0;i--){const a=S.anims[i];a.p+=dt/a.dur;if(a.p>=1){a.p=1;if(a.cb)a.cb();S.anims.splice(i,1)}}
+  S.oA+=.025;
+  if(S.actTmr>0){S.actTmr-=dt;if(S.actTmr<=0)S.actCard=null}
+  if(S.effTmr>0){S.effTmr-=dt;if(S.effTmr<=0)S.effCard=null}
+  if(S.effTmr>0){S.effTmr-=dt;if(S.effTmr<=0)S.effCard=null}
+  for(let i=S.parts.length-1;i>=0;i--){const p=S.parts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.1;p.l-=p.d;if(p.l<=0)S.parts.splice(i,1)}
+}
+function loop(ts){upd(ts);draw();requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+
+// Title
+(function(){
+  const g=document.getElementById('raceGrid');
+  RACES.forEach(r=>{
+    const d=document.createElement('div');d.className='rc';
+    const cv=document.createElement('canvas');cv.width=74;cv.height=90;d.appendChild(cv);
+    const sp=RS[r.ss];
+    function dp(){if(!iR.complete)return setTimeout(dp,100);cv.getContext('2d').drawImage(iR,sp[0],sp[1],sp[2],sp[3],0,0,74,90)}dp();
+    const nm=document.createElement('span');nm.className='rn';nm.style.color=r.color;nm.textContent=r.name;d.appendChild(nm);
+    d.onclick=()=>{g.querySelectorAll('.rc').forEach(c=>c.classList.remove('pk'));d.classList.add('pk');S.pRace=r.id;document.getElementById('btnStart').disabled=false};
+    g.appendChild(d);
+  });
+  document.getElementById('btnStart').onclick=startGame;
+})();
+
+function startGame(){
+  if(!S.pRace)return;
+  // Go fullscreen
+  const el=document.documentElement;
+  if(el.requestFullscreen)el.requestFullscreen().catch(()=>{});
+  else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();
+  document.getElementById('title-screen').classList.add('hidden');
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('log').style.display='block';
+  const ot=RACES.filter(r=>r.id!==S.pRace);
+  S.aRace=ot[0|Math.random()*ot.length].id;
+  const pR=RACES.find(r=>r.id===S.pRace),aR=RACES.find(r=>r.id===S.aRace);
+  S.pC=pR.m.map((n,i)=>({isCrea:true,race:pR.id,name:n,owner:0,sprIdx:pR.ss+i}));
+  S.aC=aR.m.map((n,i)=>({isCrea:true,race:aR.id,name:n,owner:1,sprIdx:aR.ss+i}));
+  S.dk=[];ACTIONS.forEach(a=>{for(let i=0;i<a.count;i++)S.dk.push({...a,isCrea:false,uid:Math.random().toString(36).slice(2)})});
+  shuf(S.dk);S.pH=[];S.aH=[];
+  for(let i=0;i<5;i++){if(S.dk.length)S.pH.push(S.dk.pop());if(S.dk.length)S.aH.push(S.dk.pop())}
+  S.tbl=[];S.eat=[];S.turn=1;S.cur=0;S.can=true;S.drawn=false;S.sel=-1;S.phase='play';S.pPos=[];S.aPos=[];
+  log(`🎮 ${pR.name} vs ${aR.name} !`);log('📝 Cliquez une carte, re-cliquez pour jouer.');uHUD();
+}
+
+function uHUD(){
+  document.getElementById('h2').textContent=S.cur===0?'🟢 Votre Tour':'🔴 Tour Adversaire';
+}
+
+function showAct(c,d=2500){S.actCard=c;S.actTmr=d;sfxAction.currentTime=0;sfxAction.play().catch(()=>{})}
+function showEff(c,d=2000){S.effCard=c;S.effTmr=d;sfxContre.currentTime=0;sfxContre.play().catch(()=>{})}
+function canCtr(c){
+  if(!c.counters||!c.counters.length)return false;
+  return S.pH.some(x=>c.counters.includes(x.id));
+}
+
+// Counter dialog with card visuals
+function showCtrUI(aiCard){
+  S.ctrPend=true;S.can=false;
+  const dlg=document.getElementById('ctr-dlg');
+  document.getElementById('cdTitle').textContent=`⚠️ L'adversaire joue :`;
+  // Draw played card
+  const pp=document.getElementById('cdPlayed');pp.innerHTML='';
+  const cv1=document.createElement('canvas');cv1.width=160;cv1.height=224;pp.appendChild(cv1);
+  setTimeout(()=>{
+    const cx=cv1.getContext('2d');
+    const sp=ES[aiCard.sprite];
+    if(sp&&iE.complete)cx.drawImage(iE,sp[0],sp[1],sp[2],sp[3],0,0,160,224);
+  },50);
+  // Card name under preview
+  const nm=document.createElement('div');nm.style.cssText='color:#ff8844;font-size:14px;font-weight:bold;margin-top:4px';nm.textContent=aiCard.name;pp.appendChild(nm);
+  const ds=document.createElement('div');ds.style.cssText='color:#aaa;font-size:12px;margin-bottom:6px';ds.textContent=aiCard.desc;pp.appendChild(ds);
+  // Counter options
+  const opts=document.getElementById('cdOpts');opts.innerHTML='';
+  const cs=S.pH.filter(c=>aiCard.counters.includes(c.id));
+  cs.forEach(c=>{
+    const wrap=document.createElement('div');wrap.className='cd-card';wrap.style.textAlign='center';
+    const cv=document.createElement('canvas');cv.width=120;cv.height=168;wrap.appendChild(cv);
+    setTimeout(()=>{const cx=cv.getContext('2d');const sp=ES[c.sprite];if(sp&&iE.complete)cx.drawImage(iE,sp[0],sp[1],sp[2],sp[3],0,0,120,168)},50);
+    const lb=document.createElement('div');lb.style.cssText='color:#88ff88;font-size:11px;margin-top:3px;font-weight:bold';lb.textContent=c.name;wrap.appendChild(lb);
+    wrap.onclick=()=>{
+      dlg.classList.remove('show');S.ctrPend=false;
+      const idx=S.pH.indexOf(c);
+      const l=getL();
+      // Get card position in hand for animation start
+      const p=S.pPos[idx];
+      const fx=p?p.x:l.phX+(idx*l.phSp), fy=p?p.y:l.phY;
+      if(idx>=0)S.pH.splice(idx,1);
+      // Animate counter card flying to effect zone
+      const toX=l.ezX+(l.ezW-l.CW)/2, toY=l.ezY+(l.ezH-l.CH)/2;
+      addAn(c,fx,fy,toX,toY,400,()=>{
+        S.effCard=c;S.effTmr=2500;
+        spP(toX+l.CW/2,toY+l.CH/2,'#44ff44',18);
+        log(`🛡️ Contré: ${c.name} !`);
+        if(c.id==='surprise_chef'&&S.aC.length){sndE(1);log('↩️ Contre-attaque !')}
+        S.can=true;uHUD();if(S.ctrRes)S.ctrRes(true);
+      },{fw:l.CW,fh:l.CH,tw:l.CW,th:l.CH});
+    };
+    opts.appendChild(wrap);
+  });
+  document.getElementById('cdSkip').onclick=()=>{dlg.classList.remove('show');S.ctrPend=false;S.can=true;if(S.ctrRes)S.ctrRes(false)};
+  dlg.classList.add('show');
+}
+
+// Input
+C.addEventListener('mousemove',e=>{
+  if(S.phase!=='play'||S.ctrPend)return;
+  const mx=e.clientX,my=e.clientY,l=getL();
+  S.hovH=-1;S.hovT=-1;S.hovPC=-1;S.hovBtn=null;
+  if(S.cur!==0)return;
+  for(let i=S.pH.length-1;i>=0;i--){const p=S.pPos[i];if(!p)continue;if(mx>=p.x&&mx<=p.x+l.CW&&my>=p.y+p.ly-5&&my<=p.y+p.ly+l.CH+5){S.hovH=i;return}}
+  for(let i=S.tbl.length-1;i>=0;i--){const tx=l.tcX+i*l.tSp;if(mx>=tx&&mx<=tx+l.SW&&my>=l.tcY&&my<=l.tcY+l.SH){S.hovT=i;return}}
+  if(S.can){
+    if(mx>=l.bpX-40&&mx<=l.bpX+160&&my>=l.bpY&&my<=l.bpY+32){S.hovBtn='pass';return}
+  }
+});
+C.addEventListener('click',e=>{
+  if(S.phase!=='play'||S.cur!==0||S.ctrPend)return;
+  const mx=e.clientX,my=e.clientY,l=getL();
+  
+  // In discard mode: click any card to discard it
+  if(S.discardMode){
+    for(let i=S.pH.length-1;i>=0;i--){
+      const p=S.pPos[i];if(!p)continue;
+      if(mx>=p.x&&mx<=p.x+l.CW&&my>=p.y+p.ly-5&&my<=p.y+p.ly+l.CH+5){
+        S.hovH=-1;
+        playerDiscard(i);
+        return;
+      }
+    }
+    return;
+  }
+  
+  if(!S.can)return;
+  for(let i=S.pH.length-1;i>=0;i--){const p=S.pPos[i];if(!p)continue;if(mx>=p.x&&mx<=p.x+l.CW&&my>=p.y+p.ly-5&&my<=p.y+p.ly+l.CH+5){if(!canPlay(S.pH[i]))return;S.hovH=-1;playCard(i);return}}
+  if(mx>=l.bpX-40&&mx<=l.bpX+160&&my>=l.bpY&&my<=l.bpY+32){pass();return}
+  S.sel=-1;
+});
+
+// Touch support for mobile
+function getTouchPos(e){const t=e.touches[0]||e.changedTouches[0];return{x:t.clientX,y:t.clientY}}
+C.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  const{x:mx,y:my}=getTouchPos(e);
+  // Simulate hover for the touched card
+  if(S.phase==='play'&&S.cur===0){
+    const l=getL();
+    S.hovH=-1;
+    for(let i=S.pH.length-1;i>=0;i--){
+      const p=S.pPos[i];if(!p)continue;
+      if(mx>=p.x&&mx<=p.x+l.CW&&my>=p.y+p.ly-10&&my<=p.y+p.ly+l.CH+10){S.hovH=i;break}
+    }
+  }
+},{passive:false});
+
+C.addEventListener('touchend',e=>{
+  e.preventDefault();
+  const{x:mx,y:my}=getTouchPos(e);
+  // Simulate click
+  if(S.phase!=='play'||S.cur!==0||S.ctrPend)return;
+  const l=getL();
+
+  if(S.discardMode){
+    for(let i=S.pH.length-1;i>=0;i--){
+      const p=S.pPos[i];if(!p)continue;
+      if(mx>=p.x&&mx<=p.x+l.CW&&my>=p.y+p.ly-10&&my<=p.y+p.ly+l.CH+10){
+        S.hovH=-1;playerDiscard(i);return;
+      }
+    }
+    return;
+  }
+  if(!S.can)return;
+  for(let i=S.pH.length-1;i>=0;i--){
+    const p=S.pPos[i];if(!p)continue;
+    if(mx>=p.x&&mx<=p.x+l.CW&&my>=p.y+p.ly-10&&my<=p.y+p.ly+l.CH+10){
+      if(!canPlay(S.pH[i]))return;
+      S.hovH=-1;playCard(i);return;
+    }
+  }
+  if(mx>=l.bpX&&mx<=l.bpX+200&&my>=l.bpY&&my<=l.bpY+34){pass();return}
+  S.hovH=-1;
+},{passive:false});
+
+// Auto-draw to 5
+function autoDraw(who,cb){
+  const hand=who===0?S.pH:S.aH;
+  if(hand.length>=5){if(cb)cb();return}
+  refillDeck();
+  if(!S.dk.length){if(cb)cb();return}
+  const c=S.dk.pop();const l=getL();
+  if(who===0){
+    const ti=S.pH.length;const tx=l.phX+ti*l.phSp,ty=l.phY;
+    addAn(c,l.dpX,l.dpY,tx,ty,400,()=>{S.pH.push(c);log(`📥 Pioché: ${c.name}`);spP(tx+l.CW/2,ty+l.CH/2,'#44aaff',8);uHUD();setTimeout(()=>autoDraw(who,cb),150)},{back:true,fw:l.dpW,fh:l.dpH,tw:l.CW,th:l.CH});
+  } else {
+    const ti=S.aH.length;const tx=l.ahX+ti*l.ahSp,ty=l.ahY;
+    addAn(c,l.dpX,l.dpY,tx,ty,350,()=>{S.aH.push(c);uHUD();setTimeout(()=>autoDraw(who,cb),150)},{back:true,fw:l.dpW,fh:l.dpH,tw:l.TW,th:l.TH});
+  }
+}
+
+function pDraw(){
+  refillDeck();
+  if(!S.dk.length||S.drawn)return;
+  S.drawn=true;
+  const c=S.dk.pop();const l=getL();
+  const ti=S.pH.length;const tx=l.phX+ti*l.phSp,ty=l.phY;
+  addAn(c,l.dpX,l.dpY,tx,ty,450,()=>{S.pH.push(c);log(`📥 Pioché: ${c.name}`);spP(tx+l.CW/2,ty+l.CH/2,'#44aaff',10);uHUD()},{back:true,fw:l.dpW,fh:l.dpH,tw:l.CW,th:l.CH});
+  uHUD();
+}
+
+function playCard(idx){
+  const card=S.pH[idx];if(!card)return;
+  const l=getL();const p=S.pPos[idx];
+  const fx=p?p.x:l.phX+idx*l.phSp,fy=p?p.y:l.phY;
+  S.pH.splice(idx,1);S.sel=-1;S.can=false; // Block further actions
+  showAct(card,10000); // Keep visible during potential counter
+  addAn(card,fx,fy,l.azX+(l.azW-l.CW)/2,l.azY+(l.azH-l.CH)/2,350,()=>{
+    execCard(card,0);
+    // Set normal display after counter phase done
+    S.actTmr=2000;
+    // Ogre eats after player's turn too, then pass to AI
+    setTimeout(()=>{ogrePh();setTimeout(()=>aiTurn(),600)},800);
+  },{fw:l.CW,fh:l.CH,tw:l.CW,th:l.CH});
+  uHUD();
+}
+
+function execCard(card,ow){
+  log(`${ow===0?'⚔️':'🤖'} ${ow===0?'Vous':'Adv.'}: ${card.name}`);
+
+  // AI tries to counter player's card
+  if(ow===0&&card.counters&&card.counters.length>0){
+    const aiCounter=S.aH.find(c=>card.counters.includes(c.id));
+    if(aiCounter&&Math.random()<0.7){ // 70% chance AI plays counter
+      const ci=S.aH.indexOf(aiCounter);
+      const l=getL();
+      const p=S.aPos[ci];
+      const fx=p?p.x:l.ahX+ci*l.ahSp, fy=p?p.y:l.ahY;
+      S.aH.splice(ci,1);
+      // Animate counter card flying from AI hand onto action zone (over the played card)
+      const toX=l.ezX+(l.ezW-l.CW)/2, toY=l.ezY+(l.ezH-l.CH)/2;
+      addAn(aiCounter,fx,fy,toX,toY,450,()=>{
+        S.effCard=aiCounter;S.effTmr=2500;
+        sfxContre.currentTime=0;sfxContre.play().catch(()=>{});
+        spP(toX+l.CW/2,toY+l.CH/2,'#ff4444',18);
+        log(`🛡️ Adversaire contre avec ${aiCounter.name} !`);
+        // Surprise du chef: counter + send player creature to table
+        if(aiCounter.id==='surprise_chef'&&S.pC.length){
+          const ci2=pickCreature(S.pC);
+          const c=S.pC.splice(ci2,1)[0];
+          sendToTbl(c,0,false);
+          log(`↩️ ${c.name} renvoyé sur la table !`);
+        }
+        uHUD();
+      },{back:false,fw:l.TW,fh:l.TH,tw:l.CW,th:l.CH});
+      return; // Card was countered, don't execute
+    }
+  }
+
+  const enemy=ow===0?S.aC:S.pC;
+  const eOwn=ow===0?1:0;
+
+  switch(card.id){
+    // À Table variants: send 1 enemy to table (RIGHT side = push)
+    case'a_table_1':case'a_table_2':case'a_table_3':
+      if(enemy.length){const ci=pickCreature(enemy);const c=enemy.splice(ci,1)[0];sendToTbl(c,eOwn,false)}
+      break;
+    case'buffet':
+      // Start gueuleton at rate 2
+      S.gueuleton=true;S.gRate=2;log('Gueuleton ! (2 dévorés/tour)');
+      break;
+    case'choucroute':
+      // Eat ALL on table
+      eatAll();break;
+    case'fromage':
+      for(let i=0;i<2&&enemy.length;i++){const ci=pickCreature(enemy);const c=enemy.splice(ci,1)[0];sendToTbl(c,eOwn,false)}
+      break;
+    case'goinfrerie':
+      for(let i=0;i<2&&enemy.length;i++){const ci=pickCreature(enemy);const c=enemy.splice(ci,1)[0];sendToTbl(c,eOwn,false)}
+      S.gueuleton=true;S.gRate=2;log('Gueuleton ! (2 dévorés/tour)');
+      break;
+    case'hors_doeuvre':
+      // Start gueuleton immediately
+      S.gueuleton=true;S.gRate=1;log('Le gueuleton commence !');
+      break;
+    case'panier':
+      if(enemy.length){const ci=pickCreature(enemy);const c=enemy.splice(ci,1)[0];sendToTbl(c,eOwn,false)}
+      break;
+    case'pique':
+      if(enemy.length){const ci=pickCreature(enemy);const c=enemy.splice(ci,1)[0];S.eat.push(c);log(`💀 ${c.name} dévoré (Pique Assiette) !`)}
+      const self=ow===0?S.pC:S.aC;
+      if(self.length){const ci=pickCreature(self);const c=self.splice(ci,1)[0];sendToTbl(c,ow,false)}
+      break;
+    case'plat_du_jour':
+      if(enemy.length){const ci=pickCreature(enemy);const c=enemy.splice(ci,1)[0];sendToTbl(c,eOwn,true);log(`Au plus près de l'assiette !`)}
+      break;
+    // Defense/counter cards
+    case'chef_parti':
+      // Used reactively to counter retour_cuisine (handled in counter system)
+      log('🛡️ Le Chef est Parti !');break;
+    case'garde_manger':
+      // Used reactively to counter goinfrerie
+      log('🛡️ Garde-Manger !');break;
+    case'surprise_chef':
+      if(ow===0&&S.aC.length){const ci=pickCreature(S.aC);const c=S.aC.splice(ci,1)[0];sendToTbl(c,1,false);log(`↩️ Renvoyé !`)}
+      else if(ow===1&&S.pC.length){const ci=pickCreature(S.pC);const c=S.pC.splice(ci,1)[0];sendToTbl(c,0,false);log(`↩️ Renvoyé !`)}
+      break;
+    case'trop_sale':
+      log('🛡️ Trop Salé !');break;
+    case'chaud_devant':
+      shuf(S.tbl);log('🔀 Positions mélangées !');break;
+    case'indigestion':
+      retA();log('💨 Table vidée !');break;
+    case'pas_bon':
+      if(ow===0)resO();else{const m=S.tbl.filter(e=>e.owner===1);S.tbl=S.tbl.filter(e=>e.owner!==1);m.forEach(e=>returnToPool(S.aC,e.card))}
+      break;
+    case'retour_cuisine':
+      if(ow===0)res1(0);else res1(1);break;
+    case'ronde':
+      // Replace a creature on table with one from reserve
+      swTR(ow);break;
+    case'trou_normand':
+      S.gueuleton=false;S.gRate=1;log('🛑 Gueuleton stoppé !');break;
+    case'veneneux':
+      // Save OWN creature closest to plate (leftmost first), fallback to any
+      if(S.tbl.length){
+        const mine=ow===0?0:1;
+        // Find own creature closest to plate (lowest index)
+        let idx=S.tbl.findIndex(e=>e.owner===mine);
+        // If no own creature, take any (leftmost)
+        if(idx<0)idx=0;
+        if(idx>=0){
+          const e=S.tbl.splice(idx,1)[0];
+          const l=getL();
+          const fromX=(e._x!==undefined)?e._x:(l.tcX+idx*l.tSp), fromY=l.tcY;
+          const pool=e.owner===0?S.pC:S.aC;
+          const ti=pool.length>0?pool.length-1:0;
+          const toX=e.owner===0?(l.pcX+ti*l.pcSp):(l.acX+ti*l.acSp);
+          const toY=e.owner===0?l.pcY:l.acY;
+          const tw=e.owner===0?l.SW:l.TW, th=e.owner===0?l.SH:l.TH;
+          addAn(e.card,fromX,fromY,toX,toY,500,()=>{
+            returnToPool(pool,e.card);
+            spP(toX+tw/2,toY+th/2,'#44ff44',12);
+            log(`↩️ ${e.card.name} sauvé de la table !`);
+            if(!S.tbl.length&&S.gueuleton){S.gueuleton=false;S.gRate=1;log('🛑 Table vide — gueuleton terminé.')}
+            uHUD();
+          },{fw:l.SW,fh:l.SH,tw,th});
+        }
+      }
+      break;
+  }
+  // Check gueuleton trigger: 3+ on table
+  if(S.tbl.length>=5&&!S.gueuleton){S.gueuleton=true;S.gRate=1;log('⚠️ 5+ créatures ! Le gueuleton se déclenche !')}
+  spP(S.W/2,S.H*.4,'#ff6b00',12);uHUD();chkEnd();
+}
+
+function swTR(ow){
+  const mine=ow===0?0:1;
+  const enemyPool=ow===0?S.aC:S.pC;
+  const myPool=ow===0?S.pC:S.aC;
+  const eOwn=ow===0?1:0;
+  // Find one of MY creatures on the table
+  const mi=S.tbl.findIndex(e=>e.owner===mine);
+  if(mi>=0&&enemyPool.length){
+    // Remove my creature from table, return it to me
+    const old=S.tbl.splice(mi,1)[0];
+    myPool.splice(myPool.length-1,0,old.card); // Insert before captain
+    log(`↩️ ${old.card.name} récupéré !`);
+    // Send an enemy creature to the table in its place
+    const ci=pickCreature(enemyPool);
+    const c=enemyPool.splice(ci,1)[0];
+    sendToTbl(c,eOwn,false);
+    log(`🔄 Remplacé par ${c.name} !`);
+  }
+  uHUD();
+}
+
+// Animated card fly to table position - starts from creature row of the owner
+function sendToTbl(card,owner,front){
+  const l=getL();
+  const idx=front?0:S.tbl.length;
+  if(front)S.tbl.unshift({card,owner,_fly:true});
+  else S.tbl.push({card,owner,_fly:true});
+  const l2=getL();
+  const toX=l2.tcX+idx*l2.tSp,toY=l2.tcY;
+  // Start from creature's row position
+  let fromX,fromY,fw,fh;
+  if(owner===0){
+    // Player creature: from player creature row (bottom)
+    fromX=l.pcX+S.pC.length*l.pcSp; fromY=l.pcY; fw=l.SW; fh=l.SH;
+  } else {
+    // AI creature: from AI creature row (top)
+    fromX=l.acX+S.aC.length*l.acSp; fromY=l.acY; fw=l.TW; fh=l.TH;
+  }
+  addAn(card,fromX,fromY,toX,toY,500,()=>{
+    const e=S.tbl.find(t=>t.card===card);if(e)e._fly=false;
+    spP(toX+l.SW/2,toY+l.SH/2,'#ff6b00',10);uHUD();
+  },{fw,fh,tw:l.SW,th:l.SH});
+  log(`🍽️ ${card.name} sur la table !`);uHUD();
+}
+
+// New cards go to RIGHT (push). Ogre eats from LEFT (shift).
+function sndE(n){for(let i=0;i<n&&S.aC.length;i++){const ci=pickCreature(S.aC);const c=S.aC.splice(ci,1)[0];sendToTbl(c,1,false)}uHUD()}
+function aiSP(n){for(let i=0;i<n&&S.pC.length;i++){const ci=pickCreature(S.pC);const c=S.pC.splice(ci,1)[0];sendToTbl(c,0,false)}uHUD()}
+// Eat from LEFT (index 0 = closest to plate) with plate animation
+function eatN(n){
+  S.oE=true;
+  let eaten=0;
+  function eatNext(){
+    if(eaten>=n||!S.tbl.length){
+      // Stop gueuleton if table is now empty
+      if(S.tbl.length===0&&S.gueuleton){S.gueuleton=false;S.gRate=1;log('🛑 Table vide — gueuleton terminé.')}
+      setTimeout(()=>{S.oE=false},800);uHUD();chkEnd();return;
+    }
+    const l=getL();
+    // Card at index 0 = leftmost = closest to plate
+    const fromX=l.tcX+0*l.tSp, fromY=l.tcY;
+    const e=S.tbl.shift();
+    // Fly to plate center, shrinking
+    addAn(e.card,fromX,fromY,l.plateX,l.plateY,450,()=>{
+      S.eat.push(e.card);
+      spP(l.plateX+l.SW*.3,l.plateY+l.SH*.3,'#ff0000',18);
+      log(`💀 ${e.card.name} dévoré !`);
+      uHUD();eaten++;
+      setTimeout(eatNext,300);
+    },{fw:l.SW,fh:l.SH,tw:l.SW*.5,th:l.SH*.5});
+  }
+  eatNext();
+}
+function eatAll(){
+  S.oE=true;
+  const total=S.tbl.length;
+  let eaten=0;
+  function eatNext(){
+    if(!S.tbl.length){
+      if(S.gueuleton){S.gueuleton=false;S.gRate=1;log('🛑 Table vide — gueuleton terminé.')}
+      setTimeout(()=>{S.oE=false},800);uHUD();chkEnd();return;
+    }
+    const l=getL();
+    const fromX=l.tcX, fromY=l.tcY;
+    const e=S.tbl.shift();
+    addAn(e.card,fromX,fromY,l.plateX,l.plateY,350,()=>{
+      S.eat.push(e.card);
+      spP(l.plateX+l.SW*.3,l.plateY+l.SH*.3,'#ff0000',12);
+      log(`💀 ${e.card.name} !`);
+      uHUD();eaten++;
+      setTimeout(eatNext,180);
+    },{fw:l.SW,fh:l.SH,tw:l.SW*.45,th:l.SH*.45});
+  }
+  eatNext();
+}
+function retL(){
+  if(!S.tbl.length)return;
+  const e=S.tbl.pop();
+  const l=getL();
+  const idx=S.tbl.length; // was at end
+  const fromX=l.tcX+idx*l.tSp, fromY=l.tcY;
+  const pool=e.owner===0?S.pC:S.aC;
+  const ti=pool.length>0?pool.length-1:0; // insert before captain
+  const toX=e.owner===0?(l.pcX+ti*l.pcSp):(l.acX+ti*l.acSp);
+  const toY=e.owner===0?l.pcY:l.acY;
+  const tw=e.owner===0?l.SW:l.TW, th=e.owner===0?l.SH:l.TH;
+  addAn(e.card,fromX,fromY,toX,toY,500,()=>{
+    returnToPool(pool,e.card);
+    spP(toX+tw/2,toY+th/2,'#44ff44',12);
+    if(!S.tbl.length&&S.gueuleton){S.gueuleton=false;S.gRate=1;log('🛑 Table vide — gueuleton terminé.')}
+    uHUD();
+  },{fw:l.SW,fh:l.SH,tw,th});
+  uHUD();
+}
+function retA(){
+  // Animate each card returning sequentially
+  function retNext(){
+    if(!S.tbl.length){if(S.gueuleton){S.gueuleton=false;S.gRate=1;log('🛑 Table vide — gueuleton terminé.')}uHUD();return}
+    const e=S.tbl.shift();
+    const l=getL();
+    const fromX=l.tcX, fromY=l.tcY;
+    const pool=e.owner===0?S.pC:S.aC;
+    const ti=pool.length>0?pool.length-1:0;
+    const toX=e.owner===0?(l.pcX+ti*l.pcSp):(l.acX+ti*l.acSp);
+    const toY=e.owner===0?l.pcY:l.acY;
+    const tw=e.owner===0?l.SW:l.TW, th=e.owner===0?l.SH:l.TH;
+    addAn(e.card,fromX,fromY,toX,toY,400,()=>{
+      returnToPool(pool,e.card);
+      spP(toX+tw/2,toY+th/2,'#44ff44',8);
+      uHUD();setTimeout(retNext,150);
+    },{fw:l.SW,fh:l.SH,tw,th});
+  }
+  retNext();
+}
+function resO(){
+  const mine=S.tbl.filter(e=>e.owner===0);
+  S.tbl=S.tbl.filter(e=>e.owner!==0);
+  function retNext(){
+    if(!mine.length){if(!S.tbl.length&&S.gueuleton){S.gueuleton=false;S.gRate=1;log('🛑 Table vide — gueuleton terminé.')}uHUD();return}
+    const e=mine.shift();
+    const l=getL();
+    const fromX=l.tcX, fromY=l.tcY;
+    const ti=S.pC.length>0?S.pC.length-1:0;
+    const toX=l.pcX+ti*l.pcSp, toY=l.pcY;
+    addAn(e.card,fromX,fromY,toX,toY,400,()=>{
+      returnToPool(S.pC,e.card);
+      spP(toX+l.SW/2,toY+l.SH/2,'#44ff44',8);
+      uHUD();setTimeout(retNext,150);
+    },{fw:l.SW,fh:l.SH,tw:l.SW,th:l.SH});
+  }
+  retNext();
+}
+function res1(o){
+  const i=S.tbl.findIndex(e=>e.owner===o);
+  if(i<0)return;
+  const e=S.tbl.splice(i,1)[0];
+  const l=getL();
+  const fromX=l.tcX+i*l.tSp, fromY=l.tcY;
+  const pool=o===0?S.pC:S.aC;
+  const ti=pool.length>0?pool.length-1:0; // insert before captain
+  const toX=o===0?(l.pcX+ti*l.pcSp):(l.acX+ti*l.acSp);
+  const toY=o===0?l.pcY:l.acY;
+  const tw=o===0?l.SW:l.TW, th=o===0?l.SH:l.TH;
+  addAn(e.card,fromX,fromY,toX,toY,500,()=>{
+    returnToPool(pool,e.card);
+    spP(toX+tw/2,toY+th/2,'#44ff44',12);
+    log(`↩️ ${e.card.name} retourne chez ${o===0?'vous':'l\'adversaire'} !`);
+    if(!S.tbl.length&&S.gueuleton){S.gueuleton=false;S.gRate=1;log('🛑 Table vide — gueuleton terminé.')}
+    uHUD();
+  },{fw:l.SW,fh:l.SH,tw,th});
+  uHUD();
+}
+
+// Pick a random creature to send to table, but NEVER the last one (captain = rightmost)
+function pickCreature(pool){
+  if(pool.length<=1)return 0; // Only captain left, must send
+  // Pick from all EXCEPT the last (captain = rightmost)
+  return 0|Math.random()*(pool.length-1);
+}
+
+// Return a creature to its pool, always inserting BEFORE the captain (last position)
+function returnToPool(pool, card){
+  if(pool.length===0){pool.push(card);return}
+  // Insert before last element (captain stays rightmost)
+  pool.splice(pool.length-1, 0, card);
+}
+
+function pass(){
+  // Enter discard mode: player must click a card to discard
+  S.discardMode=true;
+  log('🗑️ Choisissez une carte à défausser...');
+  uHUD();
+}
+
+function playerDiscard(idx){
+  const card=S.pH[idx];if(!card)return;
+  S.discardMode=false;
+  const l=getL();
+  const p=S.pPos[idx];
+  const fx=p?p.x:l.phX+idx*l.phSp, fy=p?p.y:l.phY;
+  S.pH.splice(idx,1);
+  S.hovH=-1;
+  // Animate card flying to discard pile
+  addAn(card,fx,fy,l.ddX,l.ddY,400,()=>{
+    spP(l.ddX+l.ddW/2,l.ddY+l.ddH/2,'#888888',10);
+    log(`🗑️ Défaussé: ${card.name}`);
+    // Draw FIRST, then put in discard (so we don't redraw the same card)
+    refillDeck();
+    if(S.dk.length){
+      const nc=S.dk.pop();
+      S.discard.push(card); // Now safe to discard
+      const ti=S.pH.length;
+      const tx=l.phX+ti*l.phSp,ty=l.phY;
+      addAn(nc,l.dpX,l.dpY,tx,ty,400,()=>{
+        S.pH.push(nc);
+        log(`📥 Pioché: ${nc.name}`);
+        spP(tx+l.CW/2,ty+l.CH/2,'#44aaff',8);
+        uHUD();
+        S.can=false;
+        setTimeout(()=>{ogrePh();setTimeout(()=>aiTurn(),600)},400);
+      },{back:true,fw:l.dpW,fh:l.dpH,tw:l.CW,th:l.CH});
+    } else {
+      S.discard.push(card);
+      S.can=false;uHUD();
+      setTimeout(()=>{ogrePh();setTimeout(()=>aiTurn(),600)},400);
+    }
+  },{fw:l.CW,fh:l.CH,tw:l.ddW,th:l.ddH});
+  uHUD();
+}
+
+// AI discard: pick the least useful card
+function aiDiscard(cb){
+  if(!S.aH.length){if(cb)cb();return}
+  // Priority to discard: counter cards that have no target, then least useful
+  const priorities=['chef_parti','garde_manger','trop_sale','surprise_chef'];
+  let discIdx=S.aH.findIndex(c=>priorities.includes(c.id));
+  if(discIdx<0)discIdx=S.aH.length-1; // Last card if no obvious discard
+  const card=S.aH[discIdx];
+  const l=getL();
+  const p=S.aPos[discIdx];
+  const fx=p?p.x:l.ahX+discIdx*l.ahSp, fy=p?p.y:l.ahY;
+  S.aH.splice(discIdx,1);
+  // Animate to discard pile
+  addAn(card,fx,fy,l.ddX,l.ddY,400,()=>{
+    spP(l.ddX+l.ddW/2,l.ddY+l.ddH/2,'#888888',8);
+    log(`🗑️ Adv. défausse: ${card.name}`);
+    refillDeck();
+    if(S.dk.length){
+      const nc=S.dk.pop();
+      S.discard.push(card); // Safe to discard now
+      const ti=S.aH.length;
+      const tx=l.ahX+ti*l.ahSp,ty=l.ahY;
+      addAn(nc,l.dpX,l.dpY,tx,ty,350,()=>{
+        S.aH.push(nc);
+        uHUD();
+        if(cb)cb();
+      },{back:true,fw:l.dpW,fh:l.dpH,tw:l.TW,th:l.TH});
+    } else {
+      S.discard.push(card);
+      uHUD();if(cb)cb();
+    }
+  },{back:false,fw:l.TW,fh:l.TH,tw:l.ddW,th:l.ddH});
+  uHUD();
+}
+
+function aiTurn(){
+  S.cur=1;uHUD();log('🤖 Tour adversaire...');
+  // AI auto-draws to 5, then waits 3s before playing
+  setTimeout(()=>{
+    autoDraw(1,()=>{setTimeout(()=>aiPlayCard(),2500)});
+  },500);
+}
+
+function aiPlayCard(){
+  if(!S.aH.length){log('🤖 Main vide, passe.');finAI();return}
+  // Filter attacks smartly
+  const atk=S.aH.filter(c=>{
+    if(c.type!=='attack')return false;
+    // Cards that need enemy creatures in RESERVE
+    if(c.id==='a_table_1'||c.id==='a_table_2'||c.id==='a_table_3'||c.id==='panier'||c.id==='plat_du_jour')return S.pC.length>0;
+    if(c.id==='fromage')return S.pC.length>=2;
+    if(c.id==='goinfrerie')return S.pC.length>=2;
+    if(c.id==='pique')return S.pC.length>0&&S.tbl.some(e=>e.owner===0);
+    // Cards that need creatures on TABLE (not reserve)
+    if(c.id==='buffet'||c.id==='hors_doeuvre')return S.tbl.length>0&&S.tbl.some(e=>e.owner===0);
+    if(c.id==='choucroute')return S.tbl.length>0&&S.tbl.some(e=>e.owner===0);
+    return true;
+  });
+  // Filter special cards
+  const spc=S.aH.filter(c=>{
+    if(c.type!=='special')return false;
+    if(c.id==='veneneux')return S.tbl.some(e=>e.owner===0); // remove player's from table
+    if(c.id==='indigestion')return S.tbl.some(e=>e.owner===1)&&S.tbl.length>0; // only if AI has creatures to save
+    if(c.id==='chaud_devant')return S.tbl.length>=2;
+    if(c.id==='ronde')return S.tbl.some(e=>e.owner===1)&&S.pC.length>0;
+    return false;
+  });
+  const def=S.aH.filter(c=>{
+    if(c.type!=='defense')return false;
+    if(c.id==='chef_parti'||c.id==='garde_manger'||c.id==='surprise_chef'||c.id==='trop_sale')return false;
+    if(c.id==='trou_normand'){
+      if(!S.gueuleton)return false;
+      if(!S.tbl.some(e=>e.owner===1))return false;
+      const firstAI=S.tbl.findIndex(e=>e.owner===1);
+      if(firstAI<0||firstAI>=S.gRate)return false;
+      return true;
+    }
+    if(c.id==='retour_cuisine')return S.tbl.some(e=>e.owner===1);
+    if(c.id==='pas_bon')return S.tbl.some(e=>e.owner===1);
+    return true;
+  });
+  // Combine all playable cards, prioritize attacks
+  const playable=[...atk,...spc,...def];
+  if(playable.length){
+    const card=playable[0];const ci=S.aH.indexOf(card);
+    const l=getL();const p=S.aPos[ci];
+    const fx=p?p.x:l.ahX+ci*l.ahSp,fy=p?p.y:l.ahY;
+    S.aH.splice(ci,1);
+    showAct(card,15000); // Keep visible during counter phase
+    addAn(card,fx,fy,l.azX+(l.azW-l.CW)/2,l.azY+(l.azH-l.CH)/2,400,()=>{
+      if(card.counters&&card.counters.length&&canCtr(card)){
+        log(`⚠️ ${card.name} — Contrer ?`);
+        S.ctrRes=ok=>{
+          S.ctrRes=null;
+          if(!ok)execCard(card,1);else log('✅ Contrée !');
+          // Clear action card after counter resolves
+          S.actTmr=1500;
+          setTimeout(()=>finAI(),500);
+        };
+        setTimeout(()=>showCtrUI(card),200);return;
+      }
+      S.actTmr=2000; // Normal display time
+      setTimeout(()=>{execCard(card,1);setTimeout(()=>finAI(),400)},300);
+    },{back:false,fw:l.TW,fh:l.TH,tw:l.CW,th:l.CH});
+    return;
+  }
+  // No useful card to play: discard least useful and draw
+  log('🤖 Défausse et passe.');
+  aiDiscard(()=>finAI());
+}
+
+function finAI(){
+  ogrePh();
+  setTimeout(()=>{
+    S.cur=0;S.turn++;S.drawn=false;S.can=true;uHUD();
+    log(`📝 Tour ${S.turn} — À vous !`);
+    // Auto-draw player to 5
+    autoDraw(0,()=>{chkEnd()});
+  },400);
+}
+
+function ogrePh(){
+  // Gueuleton auto-triggers at 3+ creatures on table
+  if(S.tbl.length>=5&&!S.gueuleton){S.gueuleton=true;S.gRate=1;log('⚠️ 5+ créatures ! Gueuleton déclenché !')}
+  if(S.gueuleton&&S.tbl.length>0){
+    const n=Math.min(S.gRate,S.tbl.length);
+    log(`🍽️ Gueuleton ! L'ogre dévore ${n} créature(s) (depuis la gauche) !`);
+    eatN(n);
+  }
+}
+
+function chkEnd(){
+  const pA=S.pC.length+S.tbl.filter(e=>e.owner===0).length;
+  const aA=S.aC.length+S.tbl.filter(e=>e.owner===1).length;
+  if(pA===0&&aA===0)endG('draw');else if(pA===0)endG('lose');else if(aA===0)endG('win');
+}
+
+function endG(r){
+  S.phase='end';document.getElementById('end').classList.add('show');
+  const t=document.getElementById('et'),p=document.getElementById('ep');
+  if(r==='win'){t.style.color='#ffd700';t.textContent='🏆 VICTOIRE !';p.textContent="Adversaire dévoré !";spP(S.W/2,S.H/2,'#ffd700',40)}
+  else if(r==='lose'){t.style.color='#ff4444';t.textContent='💀 DÉFAITE...';p.textContent="Vos créatures dévorées...";spP(S.W/2,S.H/2,'#ff0000',35)}
+  else{t.style.color='#aaa';t.textContent='🤝 ÉGALITÉ';p.textContent="Plus personne !"}
+}
+</script>
+</body>
+</html>
